@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CountDown from 'react-native-countdown-component';
+import shuffle from './Util';
 
 let g_setFlipCount;
 let g_flipCount;
@@ -216,7 +217,7 @@ let tiles = [
     alwaysOpen: false,
   }
 ];
-tiles.sort(() => Math.random() - 0.5);
+shuffle(tiles);
 function GameHeader() {
   const [flipCount, setFlipCount] = useState(0);
   g_setFlipCount = setFlipCount;
