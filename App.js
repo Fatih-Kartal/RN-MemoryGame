@@ -12,11 +12,13 @@ import {
   Dimensions,
   TouchableOpacity,
   Image,
-  Animated
+  Vibration
 } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import CountDown from 'react-native-countdown-component';
 import shuffle from './Util';
+import { GENERAL_SETTINGS } from './Settings';
+
 
 let g_setFlipCount;
 let g_flipCount;
@@ -230,8 +232,13 @@ function GameHeader() {
         <CountDown
           style={styles.gameHeaderText}
           size={12}
-          until={100}
-          onFinish={() => alert('Finished')}
+          until={1000}
+          onFinish={() => {
+            if (GENERAL_SETTINGS.vibration) {
+              Vibration.vibrate(500);
+            }
+            alert('Finished');
+          }}
           digitStyle={{ backgroundColor: '#FFF', borderWidth: 2, borderColor: '#00abff' }}
           digitTxtStyle={{ color: '#00abff' }}
           separatorStyle={{ color: '#fff' }}
@@ -279,7 +286,9 @@ function BoxComponent({ item, changeArray }) {
           if (filtered.length === 1) {
             filtered[0].alwaysOpen = true;
             tiles[item.index].alwaysOpen = true;
-            openCounter = 0;
+            if (GENERAL_SETTINGS.vibration) {
+              Vibration.vibrate(50);
+            } openCounter = 0;
           }
           tiles[item.index].open = true;
           changeArray([...tiles]);

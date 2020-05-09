@@ -10,10 +10,12 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@eva-design/eva": "^2.0.0-alpha.1",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-navigation/material-bottom-tabs": "^5.1.14",
     "@react-navigation/native": "^5.2.3",
     "@react-navigation/stack": "^5.2.18",
+    "@ui-kitten/components": "^5.0.0-alpha.1",
     "react": "^16.13.1",
     "react-native": "0.62.2",
     "react-native-countdown-component": "^2.7.1",
@@ -22,6 +24,7 @@
     "react-native-reanimated": "^1.8.0",
     "react-native-safe-area-context": "^0.7.3",
     "react-native-screens": "^2.7.0",
+    "react-native-svg": "^9.13.6",
     "react-native-vector-icons": "^6.6.0"
   },
   "devDependencies": {
