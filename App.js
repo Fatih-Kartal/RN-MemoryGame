@@ -1,27 +1,19 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback
-} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  StyleSheet,
-  View,
-  Text,
-  FlatList,
-  StatusBar,
-  Dimensions,
-  TouchableOpacity,
-  Image,
-  Vibration
+  StyleSheet, View, Text, FlatList, StatusBar, Dimensions, TouchableOpacity,
+  Image, Vibration
 } from "react-native";
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CountDown from 'react-native-countdown-component';
 import shuffle from './Util';
 import { GENERAL_SETTINGS } from './Settings';
-
+import { Button, Card, Modal, Input } from '@ui-kitten/components';
+import { TextInput } from "react-native-paper";
 
 let g_setFlipCount;
 let g_flipCount;
+let g_setScore;
+let g_score;
 const numColumns = 4;
 const tileWidth = Dimensions.get("window").width / numColumns;
 let openCounter = 0;
@@ -222,13 +214,15 @@ let tiles = [
 shuffle(tiles);
 function GameHeader() {
   const [flipCount, setFlipCount] = useState(0);
+  const [score, setScore] = useState(0);
   g_setFlipCount = setFlipCount;
+  g_setScore = setScore;
   g_flipCount = flipCount;
+  g_score = score;
   return (
     <View style={styles.gameHeader}>
       <View style={{ flexDirection: "row" }}>
-        <MaterialCommunityIcons name="clock-outline" style={styles.gameHeaderText} />
-        {/*<Text style={styles.gameHeaderText}> 60</Text>*/}
+        <FontAwesome name="clock-o" style={styles.gameHeaderText} />
         <CountDown
           style={styles.gameHeaderText}
           size={12}
@@ -249,7 +243,11 @@ function GameHeader() {
         />
       </View>
       <View style={{ flexDirection: "row" }}>
-        <MaterialCommunityIcons name="rotate-3d" style={styles.gameHeaderText}></MaterialCommunityIcons>
+        <FontAwesome name="flag-checkered" style={styles.gameHeaderText} />
+        <Text style={styles.gameHeaderText}> {score}</Text>
+      </View>
+      <View style={{ flexDirection: "row" }}>
+        <FontAwesome name="exchange" style={styles.gameHeaderText} />
         <Text style={styles.gameHeaderText}> {flipCount}</Text>
       </View>
     </View>
@@ -286,6 +284,7 @@ function BoxComponent({ item, changeArray }) {
           if (filtered.length === 1) {
             filtered[0].alwaysOpen = true;
             tiles[item.index].alwaysOpen = true;
+            g_setScore(g_score + 10);
             if (GENERAL_SETTINGS.vibration) {
               Vibration.vibrate(50);
             } openCounter = 0;
@@ -300,12 +299,38 @@ function BoxComponent({ item, changeArray }) {
     </TouchableOpacity >
   );
 }
+function GameOverComponent() {
+  const [visible, setVisible] = React.useState(false);
+  const [userName, setUserName] = React.useState("");
+  /*useEffect(() => {
+    setVisible(true);
+  }, [])*/
+  return (
+    <View>
+      <Button onPress={() => setVisible(true)}>
+        TOGGLE MODAL
+      </Button>
+      <Modal visible={visible} backdropStyle={styles.gameOverModalBackdrop}>
+        <Card style={{ width: 3 * (Dimensions.get("window").width / 4) }}>
+          <Text style={{ marginBottom: 5 }}>Game Over! Your Score: </Text>
+          <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => {
+            setUserName(value);
+          }} />
+          <Button onPress={() => setVisible(false)}>
+            SUBMIT
+          </Button>
+        </Card>
+      </Modal>
+    </View >
+  );
+};
 function App() {
   return (
     <>
       <StatusBar barStyle="default" />
       <GameHeader />
       <BoxContainerComponent />
+      <GameOverComponent />
     </>
   );
 }
@@ -341,6 +366,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     fontSize: 32,
     color: "white"
+  },
+  gameOverModalBackdrop: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   }
 });
 

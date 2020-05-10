@@ -2,13 +2,13 @@ import React from 'react';
 import { View, Text, Vibration, StyleSheet } from 'react-native';
 import { Toggle, Button } from '@ui-kitten/components';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-community/async-storage';
 
 export const GENERAL_SETTINGS = {
     darkMode: false,
     vibration: false,
     difficulty: "normal",
 }
-
 function DarkModeToggle() {
     const [checked, setChecked] = React.useState(false);
     const onCheckedChange = (isChecked) => {
@@ -56,9 +56,9 @@ function Difficulty() {
             <View style={{ flex: 11, flexDirection: "row" }}>
                 <Text style={styles.settingText}>Difficulty</Text>
                 <View style={{ flex: 16, flexDirection: "row" }}>
-                    <Button style={{marginRight:5}} size="small" onPress={() => { changeDifficulty("easy") }} appearance={selectedDifficulty == "easy" ? 'filled' : 'outline'} status='success'>Easy</Button>
-                    <Button style={{marginRight:5}} size="small" onPress={() => { changeDifficulty("normal") }} appearance={selectedDifficulty == "normal" ? 'filled' : 'outline'} status='warning'>Normal</Button>
-                    <Button style={{marginRight:5}} size="small" onPress={() => { changeDifficulty("hard") }} appearance={selectedDifficulty == "hard" ? 'filled' : 'outline'} status='danger'>Hard</Button>
+                    <Button style={{ marginRight: 5 }} size="small" onPress={() => { changeDifficulty("easy") }} appearance={selectedDifficulty == "easy" ? 'filled' : 'outline'} status='success'>Easy</Button>
+                    <Button style={{ marginRight: 5 }} size="small" onPress={() => { changeDifficulty("normal") }} appearance={selectedDifficulty == "normal" ? 'filled' : 'outline'} status='warning'>Normal</Button>
+                    <Button style={{ marginRight: 5 }} size="small" onPress={() => { changeDifficulty("hard") }} appearance={selectedDifficulty == "hard" ? 'filled' : 'outline'} status='danger'>Hard</Button>
                 </View>
             </View>
         </View >
@@ -71,6 +71,11 @@ function Settings() {
             <DarkModeToggle />
             <VibrationToggle />
             <Difficulty />
+            <Button onPress={() => {
+                storeData();
+                alert();
+                getData();
+            }}></Button>
         </View>
     );
 }

@@ -6,6 +6,7 @@ import { createMaterialBottomTabNavigator } from '@react-navigation/material-bot
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import App from './App';
 import Settings from './Settings';
+import About from './About';
 import GENERAL_SETTINGS from './Settings';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, Layout, Text } from '@ui-kitten/components';
@@ -26,7 +27,7 @@ function Main() {
                             <MaterialCommunityIcons name="settings" color={color} size={20} />
                         ),
                     }} />
-                    <Tab.Screen name="About" component={Settings} options={{
+                    <Tab.Screen name="About" component={About} options={{
                         tabBarIcon: ({ color }) => (
                             <MaterialCommunityIcons name="developer-board" color={color} size={20} />
                         ),
