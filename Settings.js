@@ -5,6 +5,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import AsyncStorage from '@react-native-community/async-storage';
 
 export let GENERAL_SETTINGS = {
+    time: 60,
     darkMode: false,
     vibration: false,
     difficulty: "normal",

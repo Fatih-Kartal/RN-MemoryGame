@@ -14,6 +14,10 @@ let GLOBAL_VARIABLES = {
   TimeLeft: 0,
   Score: 0,
   FlipCount: 0,
+  IsGameRunning: false,
+  IsTimeOver: false,
+  IsGameOver: false,
+  IsGameWon: false,
 }
 export let GLOBAL_FUNCTIONS = {
   SetScore: () => { },
@@ -36,7 +40,15 @@ export let GLOBAL_FUNCTIONS = {
     await AsyncStorage.setItem('highScores', JSON.stringify(highScores));
     GLOBAL_FUNCTIONS.GetHighScores();
   },
-  SetVisibleOfGameOverModal: () => { }
+  SetVisibleOfGameOverModal: () => { },
+  ResetGame: () => { },
+  SetTimerRunning: () => { },
+  ResetTime: () => {
+    GLOBAL_VARIABLES.IsTimeOver = false;
+    GLOBAL_VARIABLES.TimeLeft = 0;
+    GLOBAL_FUNCTIONS.SetTime(60/*GENERAL_SETTINGS.time*/);
+    GLOBAL_FUNCTIONS.SetTimerRunning(false);
+  }
 }
 const numColumns = 4;
 const tileWidth = Dimensions.get("window").width / numColumns;
@@ -239,8 +251,12 @@ shuffle(tiles);
 function GameHeader() {
   const [flipCount, setFlipCount] = useState(0);
   const [score, setScore] = useState(0);
+  const [time, setTime] = useState(60/*GENERAL_SETTINGS.time*/);
+  const [isTimerRunning, setTimerRunning] = useState(false);
   GLOBAL_FUNCTIONS.SetFlipCount = setFlipCount;
   GLOBAL_FUNCTIONS.SetScore = setScore;
+  GLOBAL_FUNCTIONS.SetTime = setTime;
+  GLOBAL_FUNCTIONS.SetTimerRunning = setTimerRunning;
   GLOBAL_VARIABLES.FlipCount = flipCount;
   GLOBAL_VARIABLES.Score = score;
   return (
@@ -250,11 +266,14 @@ function GameHeader() {
         <CountDown
           style={styles.gameHeaderText}
           size={12}
-          until={100}
+          until={time}
           onFinish={() => {
-            if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
-            //Alert.alert('Time Over', 'You run out of time', [{ text: "OK", onPress: () => { } }], { cancelable: true });
-            GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal(true);
+            if (!GLOBAL_VARIABLES.IsGameWon) {
+              if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
+              GLOBAL_VARIABLES.IsTimeOver = true;
+              GLOBAL_VARIABLES.IsGameOver = true;
+              GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal(true);
+            } //Oyun kazanıldıysa süre bitiminden etkilenme
           }}
           onChange={(e) => {
             GLOBAL_VARIABLES.TimeLeft = e;
@@ -265,7 +284,7 @@ function GameHeader() {
           timeToShow={['M', 'S']}
           timeLabels={{ m: null, s: null }}
           showSeparator
-          running
+          running={isTimerRunning}
         />
       </View>
       <View style={{ flexDirection: "row" }}>
@@ -296,6 +315,11 @@ function BoxComponent({ item, changeArray }) {
     <TouchableOpacity style={styles.tileTouchable}
       onPress={() => {
         if (item.item.open) return; //Tıkladığım karo zaten açıksa hiçbirşey yapma
+        if (GLOBAL_VARIABLES.IsGameOver) return; //Oyun bitti ise hiçbirşey yapma
+        if (!GLOBAL_VARIABLES.IsGameRunning) {
+          GLOBAL_VARIABLES.IsGameRunning = true;
+          GLOBAL_FUNCTIONS.SetTimerRunning(true);
+        }
         GLOBAL_FUNCTIONS.SetFlipCount(GLOBAL_VARIABLES.FlipCount + 1);
         if (openCounter == 2) { //Eğer tıklandığında, açık karo sayısı 2 tane ise alwaysOpen olmayan karoları kapatır
           for (let i = 0; i < tiles.length; i++) {
@@ -307,9 +331,17 @@ function BoxComponent({ item, changeArray }) {
         var filtered = tiles.filter(f => f.value === item.item.value && f.open /*&& f.tileId !== item.item.tileId*/);
         if (filtered.length === 1) {
           filtered[0].alwaysOpen = true;
+          tiles[item.index].alwaysOpen = true;
           GLOBAL_FUNCTIONS.SetScore(GLOBAL_VARIABLES.Score + 10);
           openCounter = 0;
-          if (GENERAL_SETTINGS.vibration) Vibration.vibrate(50);
+          if (GENERAL_SETTINGS.vibration) Vibration.vibrate(50); //Titreşim açıksa titret
+          if (tiles.filter(f => f.alwaysOpen === true).length === tiles.length) {
+            if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
+            GLOBAL_VARIABLES.IsGameOver = true;
+            GLOBAL_VARIABLES.IsGameWon = true;
+            GLOBAL_FUNCTIONS.SetTimerRunning(false);
+            GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal(true);
+          } //Bütün karolar açık ise oyun bitti ekranını göster
         }
         tiles[item.index].open = true;
         changeArray([...tiles]);
@@ -332,7 +364,7 @@ function GameOverComponent() {
       <Modal visible={visible} backdropStyle={styles.gameOverModalBackdrop}>
         <Card style={{ width: 3 * (Dimensions.get("window").width / 4) }}>
           <Text style={{ marginBottom: 5 }}>Game Over! Your Score: {GLOBAL_VARIABLES.Score}</Text>
-          <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
+          <Input value="Fatih Kartal" style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
           <Button onPress={() => {
             if (userName.trim() === "") {
               Alert.alert('Error', 'Please enter your name', [{ text: "OK", onPress: () => { } }], { cancelable: true });
@@ -340,6 +372,7 @@ function GameOverComponent() {
             else {
               setVisible(false);
               GLOBAL_FUNCTIONS.AddNewHighScore(userName);
+              GLOBAL_VARIABLES.ResetGame();
             }
           }}>
             SUBMIT
@@ -350,12 +383,29 @@ function GameOverComponent() {
   );
 };
 function App() {
+  const [resetGame, setResetGame] = useState(new Date());
+  GLOBAL_VARIABLES.ResetGame = () => {
+    tiles.forEach((value) => {
+      value.open = false;
+      value.alwaysOpen = false;
+    });
+    shuffle(tiles);
+    GLOBAL_VARIABLES.IsGameRunning = false;
+    GLOBAL_VARIABLES.IsGameOver = false;
+    GLOBAL_VARIABLES.IsGameWon = false;
+    GLOBAL_FUNCTIONS.ResetTime();
+    GLOBAL_FUNCTIONS.SetFlipCount(0);
+    GLOBAL_FUNCTIONS.SetScore(0);
+    setResetGame(new Date());
+  }
   return (
     <>
-      <StatusBar barStyle="default" />
-      <GameHeader />
-      <BoxContainerComponent />
-      <GameOverComponent />
+      <View key={resetGame}>
+        <StatusBar barStyle="default" />
+        <GameHeader />
+        <BoxContainerComponent />
+        <GameOverComponent />
+      </View>
     </>
   );
 }
