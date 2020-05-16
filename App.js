@@ -295,29 +295,24 @@ function BoxComponent({ item, changeArray }) {
   return (
     <TouchableOpacity style={styles.tileTouchable}
       onPress={() => {
-        if (!item.item.open) { //Tıkladığım karo zaten açıksa hiçbirşey yapma
-          GLOBAL_FUNCTIONS.SetFlipCount(GLOBAL_VARIABLES.FlipCount + 1);
-          if (openCounter == 2) { //Eğer tıklandığında, açık karo sayısı 2 tane ise alwaysOpen olmayan karoları kapatır
-            openCounter = 0;
-            for (let i = 0; i < tiles.length; i++) {
-              if (!tiles[i].alwaysOpen) {
-                tiles[i].open = false;
-              }
-            }
+        if (item.item.open) return; //Tıkladığım karo zaten açıksa hiçbirşey yapma
+        GLOBAL_FUNCTIONS.SetFlipCount(GLOBAL_VARIABLES.FlipCount + 1);
+        if (openCounter == 2) { //Eğer tıklandığında, açık karo sayısı 2 tane ise alwaysOpen olmayan karoları kapatır
+          for (let i = 0; i < tiles.length; i++) {
+            if (!tiles[i].alwaysOpen) tiles[i].open = false;
           }
-          openCounter++;
-          var filtered = tiles.filter(f => f.value === item.item.value && f.open /*&& f.tileId !== item.item.tileId*/);
-          if (filtered.length === 1) {
-            filtered[0].alwaysOpen = true;
-            tiles[item.index].alwaysOpen = true;
-            GLOBAL_FUNCTIONS.SetScore(GLOBAL_VARIABLES.Score + 10);
-            if (GENERAL_SETTINGS.vibration) {
-              Vibration.vibrate(50);
-            } openCounter = 0;
-          }
-          tiles[item.index].open = true;
-          changeArray([...tiles]);
+          openCounter = 0;
         }
+        openCounter++;
+        var filtered = tiles.filter(f => f.value === item.item.value && f.open /*&& f.tileId !== item.item.tileId*/);
+        if (filtered.length === 1) {
+          filtered[0].alwaysOpen = true;
+          GLOBAL_FUNCTIONS.SetScore(GLOBAL_VARIABLES.Score + 10);
+          openCounter = 0;
+          if (GENERAL_SETTINGS.vibration) Vibration.vibrate(50);
+        }
+        tiles[item.index].open = true;
+        changeArray([...tiles]);
       }}>
       <View style={[styles.tileView]}>
         <Image source={item.item.imagesrc} style={[styles.tileImage, { display: (item.item.open || item.item.alwaysOpen) ? "flex" : "none" }]}></Image>
@@ -331,7 +326,7 @@ function GameOverComponent() {
   GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal = setVisible;
   return (
     <View>
-       {/* <Button onPress={() => setVisible(true)}>
+      {/* <Button onPress={() => setVisible(true)}>
         TOGGLE MODAL
       </Button>  */}
       <Modal visible={visible} backdropStyle={styles.gameOverModalBackdrop}>
