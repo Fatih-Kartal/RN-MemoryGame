@@ -1,19 +1,43 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet, View, Text, FlatList, StatusBar, Dimensions, TouchableOpacity,
-  Image, Vibration
+  Image, Vibration, Alert
 } from "react-native";
+import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CountDown from 'react-native-countdown-component';
 import shuffle from './Util';
 import { GENERAL_SETTINGS } from './Settings';
 import { Button, Card, Modal, Input } from '@ui-kitten/components';
-import { TextInput } from "react-native-paper";
 
-let g_setFlipCount;
-let g_flipCount;
-let g_setScore;
-let g_score;
+let GLOBAL_VARIABLES = {
+  TimeLeft: 0,
+  Score: 0,
+  FlipCount: 0,
+}
+export let GLOBAL_FUNCTIONS = {
+  SetScore: () => { },
+  SetFlipCount: () => { },
+  SetHighScores: () => { },
+  GetHighScores: async function () {
+    try {
+      const value = await AsyncStorage.getItem('highScores');
+      var highScores = JSON.parse(value);
+      GLOBAL_FUNCTIONS.SetHighScores([...highScores]);
+    }
+    catch (e) {
+      Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+    }
+  },
+  AddNewHighScore: async function (userName) {
+    const value = await AsyncStorage.getItem('highScores');
+    var highScores = JSON.parse(value);
+    highScores.push({ user: userName, score: GLOBAL_VARIABLES.Score, flip: GLOBAL_VARIABLES.FlipCount, time: GLOBAL_VARIABLES.TimeLeft, date: new Date().toLocaleString() });
+    await AsyncStorage.setItem('highScores', JSON.stringify(highScores));
+    GLOBAL_FUNCTIONS.GetHighScores();
+  },
+  SetVisibleOfGameOverModal: () => { }
+}
 const numColumns = 4;
 const tileWidth = Dimensions.get("window").width / numColumns;
 let openCounter = 0;
@@ -215,10 +239,10 @@ shuffle(tiles);
 function GameHeader() {
   const [flipCount, setFlipCount] = useState(0);
   const [score, setScore] = useState(0);
-  g_setFlipCount = setFlipCount;
-  g_setScore = setScore;
-  g_flipCount = flipCount;
-  g_score = score;
+  GLOBAL_FUNCTIONS.SetFlipCount = setFlipCount;
+  GLOBAL_FUNCTIONS.SetScore = setScore;
+  GLOBAL_VARIABLES.FlipCount = flipCount;
+  GLOBAL_VARIABLES.Score = score;
   return (
     <View style={styles.gameHeader}>
       <View style={{ flexDirection: "row" }}>
@@ -226,12 +250,14 @@ function GameHeader() {
         <CountDown
           style={styles.gameHeaderText}
           size={12}
-          until={1000}
+          until={100}
           onFinish={() => {
-            if (GENERAL_SETTINGS.vibration) {
-              Vibration.vibrate(500);
-            }
-            alert('Finished');
+            if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
+            //Alert.alert('Time Over', 'You run out of time', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+            GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal(true);
+          }}
+          onChange={(e) => {
+            GLOBAL_VARIABLES.TimeLeft = e;
           }}
           digitStyle={{ backgroundColor: '#FFF', borderWidth: 2, borderColor: '#00abff' }}
           digitTxtStyle={{ color: '#00abff' }}
@@ -270,7 +296,7 @@ function BoxComponent({ item, changeArray }) {
     <TouchableOpacity style={styles.tileTouchable}
       onPress={() => {
         if (!item.item.open) { //Tıkladığım karo zaten açıksa hiçbirşey yapma
-          g_setFlipCount(g_flipCount + 1);
+          GLOBAL_FUNCTIONS.SetFlipCount(GLOBAL_VARIABLES.FlipCount + 1);
           if (openCounter == 2) { //Eğer tıklandığında, açık karo sayısı 2 tane ise alwaysOpen olmayan karoları kapatır
             openCounter = 0;
             for (let i = 0; i < tiles.length; i++) {
@@ -284,7 +310,7 @@ function BoxComponent({ item, changeArray }) {
           if (filtered.length === 1) {
             filtered[0].alwaysOpen = true;
             tiles[item.index].alwaysOpen = true;
-            g_setScore(g_score + 10);
+            GLOBAL_FUNCTIONS.SetScore(GLOBAL_VARIABLES.Score + 10);
             if (GENERAL_SETTINGS.vibration) {
               Vibration.vibrate(50);
             } openCounter = 0;
@@ -302,21 +328,25 @@ function BoxComponent({ item, changeArray }) {
 function GameOverComponent() {
   const [visible, setVisible] = React.useState(false);
   const [userName, setUserName] = React.useState("");
-  /*useEffect(() => {
-    setVisible(true);
-  }, [])*/
+  GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal = setVisible;
   return (
     <View>
-      <Button onPress={() => setVisible(true)}>
+       {/* <Button onPress={() => setVisible(true)}>
         TOGGLE MODAL
-      </Button>
+      </Button>  */}
       <Modal visible={visible} backdropStyle={styles.gameOverModalBackdrop}>
         <Card style={{ width: 3 * (Dimensions.get("window").width / 4) }}>
-          <Text style={{ marginBottom: 5 }}>Game Over! Your Score: </Text>
-          <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => {
-            setUserName(value);
-          }} />
-          <Button onPress={() => setVisible(false)}>
+          <Text style={{ marginBottom: 5 }}>Game Over! Your Score: {GLOBAL_VARIABLES.Score}</Text>
+          <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
+          <Button onPress={() => {
+            if (userName.trim() === "") {
+              Alert.alert('Error', 'Please enter your name', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+            }
+            else {
+              setVisible(false);
+              GLOBAL_FUNCTIONS.AddNewHighScore(userName);
+            }
+          }}>
             SUBMIT
           </Button>
         </Card>

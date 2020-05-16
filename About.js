@@ -1,18 +1,11 @@
 //#region IMPORTS
 import React, { useEffect, useState } from 'react';
-import { View, Text, Vibration, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-community/async-storage';
-import { Divider, List, ListItem } from '@ui-kitten/components';
+import { Divider, List, ListItem, Button } from '@ui-kitten/components';
+import { GLOBAL_FUNCTIONS } from './App';
 //#endregion
-async function sHighScores() {
-    try {
-        await AsyncStorage.setItem('highScores', JSON.stringify([{ score: 14, date: new Date().toLocaleString() }]));
-    }
-    catch (e) {
-        alert("An error occured while fetching data");
-    }
-}
 function AboutHeader() {
     return (
         <View style={styles.aboutHeader}>
@@ -22,26 +15,9 @@ function AboutHeader() {
 }
 function HighScores() {
     const [highScores, setHighScores] = useState([]);
-    async function getHighScores() {
-        try {
-            const value = await AsyncStorage.getItem('highScores');
-            var highScores = JSON.parse(value);
-            if (highScores === null || highScores.length === 0) {
-                setHighScores([{
-                    score: "There is no high score right now",
-                    date: new Date().toLocaleString()
-                }]);
-            }
-            else {
-                setHighScores(highScores);
-            }
-        }
-        catch (e) {
-            alert("An error occured while fetching data");
-        }
-    }
+    GLOBAL_FUNCTIONS.SetHighScores = setHighScores;
     useEffect(() => {
-        getHighScores();
+        GLOBAL_FUNCTIONS.GetHighScores();
     }, []);
     const renderItem = ({ item, index }) => (
         <ListItem
@@ -50,19 +26,19 @@ function HighScores() {
                     <View style={{ marginLeft: 8, flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
                         <View style={[styles.scoreTitleCategory, { flex: 2 }]}>
                             <FontAwesome name="user" />
-                            <Text>  Fatih Kartal</Text>
+                            <Text>  {item.user}</Text>
                         </View>
                         <View style={[styles.scoreTitleCategory, { flex: 1 }]}>
                             <FontAwesome name="flag-checkered" />
-                            <Text style={{fontSize:12}}> SCORE: {item.score} </Text>
+                            <Text style={{ fontSize: 12 }}> SCORE: {item.score} </Text>
                         </View>
                         <View style={[styles.scoreTitleCategory, { flex: 1 }]}>
                             <FontAwesome name="exchange" />
-                            <Text style={{fontSize:12}}> FLIP: {item.score}</Text>
+                            <Text style={{ fontSize: 12 }}> FLIP: {item.flip}</Text>
                         </View>
                         <View style={[styles.scoreTitleCategory, { flex: 1 }]}>
                             <FontAwesome name="clock-o" />
-                            <Text style={{fontSize:12}}> TIME: {item.score}</Text>
+                            <Text style={{ fontSize: 12 }}> TIME: {item.time}</Text>
                         </View>
                     </View>
                 );
@@ -70,21 +46,36 @@ function HighScores() {
             description={item.date}
         />
     );
-    return (
-        <List
-            style={styles.scoresContainer}
-            data={highScores}
-            ItemSeparatorComponent={Divider}
-            renderItem={renderItem}
-        />
-    );
+    if (highScores === null || highScores.length === 0) {
+        return (
+            <View style={{ height: 100, flexDirection: "row", alignItems: "center", alignSelf: "center" }}>
+                <Text style={{ fontSize: 20 }}>THERE IS NO HIGHSCORE RIGHT NOW</Text>
+            </View>
+        );
+    }
+    else {
+        return (
+            <List
+                style={styles.scoresContainer}
+                data={highScores}
+                ItemSeparatorComponent={Divider}
+                renderItem={renderItem}
+            />
+        );
+    }
 };
 function About() {
     return (
         <View>
             <AboutHeader />
             <HighScores />
-        </View>
+            <Button onPress={async function () {
+                await AsyncStorage.setItem("highScores", JSON.stringify([]));
+                GLOBAL_FUNCTIONS.SetHighScores([]);
+            }}>
+                CLEAR RECORDS
+          </Button>
+        </View >
     );
 }
 
@@ -102,7 +93,7 @@ const styles = StyleSheet.create({
         color: "white"
     },
     scoresContainer: {
-        maxHeight: 260,
+        maxHeight: 300,
     },
     scoreTitleCategory: {
         flexDirection: "row",

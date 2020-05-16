@@ -4,7 +4,7 @@ import { Toggle, Button } from '@ui-kitten/components';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-community/async-storage';
 
-export const GENERAL_SETTINGS = {
+export let GENERAL_SETTINGS = {
     darkMode: false,
     vibration: false,
     difficulty: "normal",
@@ -71,11 +71,6 @@ function Settings() {
             <DarkModeToggle />
             <VibrationToggle />
             <Difficulty />
-            <Button onPress={() => {
-                storeData();
-                alert();
-                getData();
-            }}></Button>
         </View>
     );
 }
