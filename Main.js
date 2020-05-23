@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
@@ -9,10 +9,26 @@ import Settings from './Settings';
 import About from './About';
 import GENERAL_SETTINGS from './Settings';
 import * as eva from '@eva-design/eva';
-import { ApplicationProvider, Layout, Text } from '@ui-kitten/components';
+import { ApplicationProvider, Layout, Text, Spinner } from '@ui-kitten/components';
 
 const Tab = createMaterialBottomTabNavigator();
 function Main() {
+    const [isLoading, setIsLoading] = React.useState(true);
+    React.useEffect(() => {
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 3000);
+    }, []);
+    if (isLoading) {
+        return (
+            <ApplicationProvider {...eva} theme={eva.light}>
+                <Layout style={{ flex: 1, alignItems: 'center', justifyContent: 'center', }} level='4'>
+                    <Spinner size='giant' />
+                    <Text style={{ marginTop: 40, fontWeight: "bold" }}>This is a fake loading screen..</Text>
+                </Layout>
+            </ApplicationProvider>
+        );
+    }
     return (
         <ApplicationProvider {...eva} theme={eva.light}>
             <NavigationContainer>

@@ -1,19 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Vibration, StyleSheet } from 'react-native';
 import { Toggle, Button } from '@ui-kitten/components';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AsyncStorage from '@react-native-community/async-storage';
+import { GLOBAL_FUNCTIONS, GLOBAL_VARIABLES } from './App';
 
-export let GENERAL_SETTINGS = {
-    time: 60,
-    darkMode: false,
-    vibration: false,
-    difficulty: "normal",
-}
 function DarkModeToggle() {
-    const [checked, setChecked] = React.useState(false);
+    const [checked, setChecked] = React.useState(GLOBAL_VARIABLES.GeneralSettings.darkMode);
     const onCheckedChange = (isChecked) => {
         setChecked(isChecked);
+        GLOBAL_FUNCTIONS.SetGeneralSetting("darkMode", isChecked);
     };
     return (
         <View style={styles.setting}>
@@ -26,10 +21,10 @@ function DarkModeToggle() {
     );
 };
 function VibrationToggle() {
-    const [checked, setChecked] = React.useState(false);
+    const [checked, setChecked] = React.useState(GLOBAL_VARIABLES.GeneralSettings.vibration);
     const onCheckedChange = (isChecked) => {
         setChecked(isChecked);
-        GENERAL_SETTINGS.vibration = isChecked;
+        GLOBAL_FUNCTIONS.SetGeneralSetting("vibration", isChecked);
         if (isChecked) {
             Vibration.vibrate(100);
         }
@@ -45,11 +40,11 @@ function VibrationToggle() {
     );
 };
 function Difficulty() {
-    const [selectedDifficulty, setSelectedDifficulty] = React.useState(GENERAL_SETTINGS.difficulty);
+    const [selectedDifficulty, setSelectedDifficulty] = React.useState(GLOBAL_VARIABLES.GeneralSettings.difficulty);
 
     function changeDifficulty(difficulty) {
         setSelectedDifficulty(difficulty);
-        GENERAL_SETTINGS.difficulty = difficulty;
+        GLOBAL_FUNCTIONS.SetGeneralSetting("difficulty", difficulty);
     }
     return (
         <View style={styles.setting}>

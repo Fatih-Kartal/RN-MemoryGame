@@ -7,10 +7,9 @@ import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import CountDown from 'react-native-countdown-component';
 import shuffle from './Util';
-import { GENERAL_SETTINGS } from './Settings';
 import { Button, Card, Modal, Input } from '@ui-kitten/components';
 
-let GLOBAL_VARIABLES = {
+export let GLOBAL_VARIABLES = {
   TimeLeft: 0,
   Score: 0,
   FlipCount: 0,
@@ -18,6 +17,7 @@ let GLOBAL_VARIABLES = {
   IsTimeOver: false,
   IsGameOver: false,
   IsGameWon: false,
+  GeneralSettings: {}
 }
 export let GLOBAL_FUNCTIONS = {
   SetScore: () => { },
@@ -46,8 +46,33 @@ export let GLOBAL_FUNCTIONS = {
   ResetTime: () => {
     GLOBAL_VARIABLES.IsTimeOver = false;
     GLOBAL_VARIABLES.TimeLeft = 0;
-    GLOBAL_FUNCTIONS.SetTime(60/*GENERAL_SETTINGS.time*/);
+    GLOBAL_FUNCTIONS.SetTime(60/*GLOBAL_VARIABLES.GeneralSettings.time*/);
     GLOBAL_FUNCTIONS.SetTimerRunning(false);
+
+  },
+  GetGeneralSettings: async () => {
+    try {
+      var darkMode = await AsyncStorage.getItem('darkMode');
+      var vibration = await AsyncStorage.getItem('vibration');
+      var difficulty = await AsyncStorage.getItem('difficulty');
+      var NewSettings = {
+        ...GLOBAL_VARIABLES.GeneralSettings, ...{
+          darkMode: JSON.parse(darkMode),
+          vibration: JSON.parse(vibration),
+          difficulty: JSON.parse(difficulty),
+        }
+      }
+      GLOBAL_VARIABLES.GeneralSettings = NewSettings;
+      console.log(NewSettings);
+    }
+    catch (e) {
+      console.log(e);
+      Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+    }
+  },
+  SetGeneralSetting: async (settingName, settingValue) => {
+   GLOBAL_VARIABLES.GeneralSettings[settingName] = settingValue;
+    await AsyncStorage.setItem(settingName, JSON.stringify(settingValue));
   }
 }
 const numColumns = 4;
@@ -251,7 +276,7 @@ shuffle(tiles);
 function GameHeader() {
   const [flipCount, setFlipCount] = useState(0);
   const [score, setScore] = useState(0);
-  const [time, setTime] = useState(60/*GENERAL_SETTINGS.time*/);
+  const [time, setTime] = useState(60/*GLOBAL_VARIABLES.GeneralSettings.time*/);
   const [isTimerRunning, setTimerRunning] = useState(false);
   GLOBAL_FUNCTIONS.SetFlipCount = setFlipCount;
   GLOBAL_FUNCTIONS.SetScore = setScore;
@@ -269,7 +294,7 @@ function GameHeader() {
           until={time}
           onFinish={() => {
             if (!GLOBAL_VARIABLES.IsGameWon) {
-              if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
+              if (GLOBAL_VARIABLES.GeneralSettings.vibration) Vibration.vibrate(500);
               GLOBAL_VARIABLES.IsTimeOver = true;
               GLOBAL_VARIABLES.IsGameOver = true;
               GLOBAL_FUNCTIONS.SetVisibleOfGameOverModal(true);
@@ -334,9 +359,9 @@ function BoxComponent({ item, changeArray }) {
           tiles[item.index].alwaysOpen = true;
           GLOBAL_FUNCTIONS.SetScore(GLOBAL_VARIABLES.Score + 10);
           openCounter = 0;
-          if (GENERAL_SETTINGS.vibration) Vibration.vibrate(50); //Titreşim açıksa titret
+          if (GLOBAL_VARIABLES.GeneralSettings.vibration) Vibration.vibrate(100); //Titreşim açıksa titret
           if (tiles.filter(f => f.alwaysOpen === true).length === tiles.length) {
-            if (GENERAL_SETTINGS.vibration) Vibration.vibrate(500);
+            if (GLOBAL_VARIABLES.GeneralSettings.vibration) Vibration.vibrate(500);
             GLOBAL_VARIABLES.IsGameOver = true;
             GLOBAL_VARIABLES.IsGameWon = true;
             GLOBAL_FUNCTIONS.SetTimerRunning(false);
@@ -364,7 +389,7 @@ function GameOverComponent() {
       <Modal visible={visible} backdropStyle={styles.gameOverModalBackdrop}>
         <Card style={{ width: 3 * (Dimensions.get("window").width / 4) }}>
           <Text style={{ marginBottom: 5 }}>Game Over! Your Score: {GLOBAL_VARIABLES.Score}</Text>
-          <Input value="Fatih Kartal" style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
+          <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
           <Button onPress={() => {
             if (userName.trim() === "") {
               Alert.alert('Error', 'Please enter your name', [{ text: "OK", onPress: () => { } }], { cancelable: true });
@@ -398,6 +423,7 @@ function App() {
     GLOBAL_FUNCTIONS.SetScore(0);
     setResetGame(new Date());
   }
+  GLOBAL_FUNCTIONS.GetGeneralSettings();
   return (
     <>
       <View key={resetGame}>
