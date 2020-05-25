@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   StyleSheet, View, Text, FlatList, StatusBar, Dimensions, TouchableOpacity,
-  Image, Vibration, Alert
+  Image, Vibration, Alert, ImageBackground
 } from "react-native";
 import AsyncStorage from '@react-native-community/async-storage';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -27,7 +27,7 @@ export let GLOBAL_FUNCTIONS = {
     try {
       const value = await AsyncStorage.getItem('highScores');
       var highScores = JSON.parse(value);
-      GLOBAL_FUNCTIONS.SetHighScores([...highScores]);
+      GLOBAL_FUNCTIONS.SetHighScores([...highScores.reverse()]);
     }
     catch (e) {
       Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
@@ -36,7 +36,9 @@ export let GLOBAL_FUNCTIONS = {
   AddNewHighScore: async function (userName) {
     const value = await AsyncStorage.getItem('highScores');
     var highScores = JSON.parse(value);
-    highScores.push({ user: userName, score: GLOBAL_VARIABLES.Score, flip: GLOBAL_VARIABLES.FlipCount, time: GLOBAL_VARIABLES.TimeLeft, date: new Date().toLocaleString() });
+    var newScore = { user: userName, score: GLOBAL_VARIABLES.Score, flip: GLOBAL_VARIABLES.FlipCount, time: GLOBAL_VARIABLES.TimeLeft, date: new Date().toLocaleString() }
+    console.log(newScore, GLOBAL_VARIABLES);
+    highScores.push(newScore);
     await AsyncStorage.setItem('highScores', JSON.stringify(highScores));
     GLOBAL_FUNCTIONS.GetHighScores();
   },
@@ -71,7 +73,7 @@ export let GLOBAL_FUNCTIONS = {
     }
   },
   SetGeneralSetting: async (settingName, settingValue) => {
-   GLOBAL_VARIABLES.GeneralSettings[settingName] = settingValue;
+    GLOBAL_VARIABLES.GeneralSettings[settingName] = settingValue;
     await AsyncStorage.setItem(settingName, JSON.stringify(settingValue));
   }
 }
@@ -371,7 +373,7 @@ function BoxComponent({ item, changeArray }) {
         tiles[item.index].open = true;
         changeArray([...tiles]);
       }}>
-      <View style={[styles.tileView]}>
+      <View style={[styles.tileView, { display: item.item.alwaysOpen ? "none" : "flex", borderWidth: item.item.alwaysOpen ? 0 : 2 }]}>
         <Image source={item.item.imagesrc} style={[styles.tileImage, { display: (item.item.open || item.item.alwaysOpen) ? "flex" : "none" }]}></Image>
       </View>
     </TouchableOpacity >
@@ -390,13 +392,13 @@ function GameOverComponent() {
         <Card style={{ width: 3 * (Dimensions.get("window").width / 4) }}>
           <Text style={{ marginBottom: 5 }}>Game Over! Your Score: {GLOBAL_VARIABLES.Score}</Text>
           <Input style={styles.input} status='primary' placeholder='What is your name?' onChangeText={(value) => { setUserName(value) }} />
-          <Button onPress={() => {
+          <Button onPress={async () => {
             if (userName.trim() === "") {
               Alert.alert('Error', 'Please enter your name', [{ text: "OK", onPress: () => { } }], { cancelable: true });
             }
             else {
               setVisible(false);
-              GLOBAL_FUNCTIONS.AddNewHighScore(userName);
+              await GLOBAL_FUNCTIONS.AddNewHighScore(userName);
               GLOBAL_VARIABLES.ResetGame();
             }
           }}>
@@ -426,12 +428,14 @@ function App() {
   GLOBAL_FUNCTIONS.GetGeneralSettings();
   return (
     <>
-      <View key={resetGame}>
-        <StatusBar barStyle="default" />
-        <GameHeader />
-        <BoxContainerComponent />
-        <GameOverComponent />
-      </View>
+      <ImageBackground style={{ flex: 1 }} source={require("./assets/images/background01.jpg")}>
+        <View key={resetGame}>
+          <StatusBar barStyle="default" />
+          <GameHeader />
+          <BoxContainerComponent />
+          <GameOverComponent />
+        </View>
+      </ImageBackground>
     </>
   );
 }
@@ -442,7 +446,7 @@ const styles = StyleSheet.create({
     padding: 5
   },
   tileView: {
-    borderWidth: 2,
+    //borderWidth: 2,
     borderColor: "black",
     height: "100%",
     justifyContent: "center",

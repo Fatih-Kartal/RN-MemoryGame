@@ -9,7 +9,9 @@ import { GLOBAL_FUNCTIONS } from './App';
 function AboutHeader() {
     return (
         <View style={styles.aboutHeader}>
-            <Text style={styles.aboutHeaderText}>High Scores</Text>
+            <Text style={styles.aboutHeaderText}>High Scores
+            <Text style={{ fontSize: 10 }}>  Scroll down for more.</Text>
+            </Text>
         </View>
     );
 }
