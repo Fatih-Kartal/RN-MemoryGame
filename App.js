@@ -26,20 +26,27 @@ export let GLOBAL_FUNCTIONS = {
   GetHighScores: async function () {
     try {
       const value = await AsyncStorage.getItem('highScores');
-      var highScores = JSON.parse(value);
-      GLOBAL_FUNCTIONS.SetHighScores([...highScores.reverse()]);
+      var highScores = value == null ? [] : JSON.parse(value);
+      highScores.reverse();
+      GLOBAL_FUNCTIONS.SetHighScores([...highScores]);
     }
     catch (e) {
-      Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+      Alert.alert('Error', e.message, [{ text: "OK", onPress: () => { } }], { cancelable: true });
+      //Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
     }
   },
   AddNewHighScore: async function (userName) {
     const value = await AsyncStorage.getItem('highScores');
-    var highScores = JSON.parse(value);
+    var highScores = value == null ? [] : JSON.parse(value);
     var newScore = { user: userName, score: GLOBAL_VARIABLES.Score, flip: GLOBAL_VARIABLES.FlipCount, time: GLOBAL_VARIABLES.TimeLeft, date: new Date().toLocaleString() }
-    console.log(newScore, GLOBAL_VARIABLES);
     highScores.push(newScore);
-    await AsyncStorage.setItem('highScores', JSON.stringify(highScores));
+    try {
+      await AsyncStorage.setItem('highScores', JSON.stringify(highScores));
+    }
+    catch (e) {
+      Alert.alert('Error', e.message, [{ text: "OK", onPress: () => { } }], { cancelable: true });
+      //Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+    }
     GLOBAL_FUNCTIONS.GetHighScores();
   },
   SetVisibleOfGameOverModal: () => { },
@@ -65,16 +72,20 @@ export let GLOBAL_FUNCTIONS = {
         }
       }
       GLOBAL_VARIABLES.GeneralSettings = NewSettings;
-      console.log(NewSettings);
     }
     catch (e) {
-      console.log(e);
-      Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
+      Alert.alert('Error', e.message, [{ text: "OK", onPress: () => { } }], { cancelable: true });
+      //Alert.alert('Error', 'An error occured while fetching data', [{ text: "OK", onPress: () => { } }], { cancelable: true });
     }
   },
   SetGeneralSetting: async (settingName, settingValue) => {
     GLOBAL_VARIABLES.GeneralSettings[settingName] = settingValue;
-    await AsyncStorage.setItem(settingName, JSON.stringify(settingValue));
+    try {
+      await AsyncStorage.setItem(settingName, JSON.stringify(settingValue));
+    }
+    catch (e) {
+      Alert.alert('Error', e.message, [{ text: "OK", onPress: () => { } }], { cancelable: true });
+    }
   }
 }
 const numColumns = 4;

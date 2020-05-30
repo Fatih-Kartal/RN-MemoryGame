@@ -7,7 +7,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import App from './App';
 import Settings from './Settings';
 import About from './About';
-import GENERAL_SETTINGS from './Settings';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, Layout, Text, Spinner } from '@ui-kitten/components';
 

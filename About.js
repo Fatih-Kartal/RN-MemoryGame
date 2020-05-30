@@ -1,6 +1,6 @@
 //#region IMPORTS
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-community/async-storage';
 import { Divider, List, ListItem, Button } from '@ui-kitten/components';
@@ -72,7 +72,12 @@ function About() {
             <AboutHeader />
             <HighScores />
             <Button onPress={async function () {
-                await AsyncStorage.setItem("highScores", JSON.stringify([]));
+                try {
+                    await AsyncStorage.setItem("highScores", JSON.stringify([]));
+                }
+                catch (e) {
+                    Alert.alert('Error', e.message, [{ text: "OK", onPress: () => { } }], { cancelable: true });
+                }
                 GLOBAL_FUNCTIONS.SetHighScores([]);
             }}>
                 CLEAR RECORDS
